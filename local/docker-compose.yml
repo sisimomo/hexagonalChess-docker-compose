@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  hexagonalChess_mariadb:
+    container_name: hexagonalChessa_mariadb
+    hostname: hexagonalChessa-mariadb
+    image: 'mariadb:10.11'
+    environment:
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+      - MARIADB_USER=${MARIADB_USER}
+      - MARIADB_PASSWORD=${MARIADB_PASSWORD}
+      - MARIADB_DATABASE=${MARIADB_DATABASE}
+    volumes:
+      - ./mariadb_data/volume:/var/lib/mysql
+      - ./mariadb_data/init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - 3306:3306
+
+  hexagonalChess_keycloak:
+    container_name: hexagonalChess_keycloak
+    hostname: hexagonalChess-keycloak
+    image: quay.io/keycloak/keycloak:22.0.1
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_USER}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_PASSWORD}
+    volumes:
+      - ./keycloak_data/volume:/opt/keycloak/data/
+      - ./keycloak_data/HexagonalChess-realm.json:/opt/keycloak/data/import/HexagonalChess-realm.json
+    ports:
+      - 8081:8080
+    command:
+      - start-dev --import-realm

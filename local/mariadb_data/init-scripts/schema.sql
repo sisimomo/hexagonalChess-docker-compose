@@ -1,0 +1,3 @@
+create table game (public_game bit not null, friendly_id varchar(7) not null, create_date datetime(6), game_save_id bigint not null, id bigint not null auto_increment, update_date datetime(6), black_user_uuid binary(16), white_user_uuid binary(16) not null, password tinyblob, primary key (id)) engine=InnoDB;
+create table game_save (side_turn tinyint not null check (side_turn between 0 and 1), state tinyint not null check (state between 0 and 9), id bigint not null auto_increment, history json not null, last_move_from varchar(255), last_move_to varchar(255), pieces json, primary key (id)) engine=InnoDB;
+alter table game add constraint FK_game_game_save_id foreign key (game_save_id) references game_save (id);

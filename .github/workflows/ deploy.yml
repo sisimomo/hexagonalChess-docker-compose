@@ -1,0 +1,23 @@
+name: Build & Deploy
+
+on:
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+jobs:
+  deploy_to_vm:
+    name: Deploy to VM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Connect with SSH and Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/deployments/hexagonalChess/prod
+            docker compose down
+            git pull
+            docker compose up -d

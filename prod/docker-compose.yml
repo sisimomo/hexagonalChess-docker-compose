@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  hexagonalChess_backend:
+    container_name: hexagonalChess_backend
+    hostname: hexagonalChess-backend
+    image: sisimomo/hexagonal-chess-backend:latest
+    restart: unless-stopped
+    depends_on:
+      - hexagonalChess_mariadb
+      - hexagonalChess_keycloak
+    environment:
+      - MARIADB_HOST=hexagonalChess-mariadb:3306
+      - MARIADB_USER=${MARIADB_USER}
+      - MARIADB_PASSWORD=${MARIADB_PASSWORD}
+      - MARIADB_DATABASE=${MARIADB_DATABASE}
+      - DB_ENCRYPTION_KEY=${DB_ENCRYPTION_KEY}
+      - PAGINATION_ENCRYPTION_KEY=${PAGINATION_ENCRYPTION_KEY}
+      - KEYCLOAK_HOST=${KEYCLOAK_HOST}
+      - KEYCLOAK_USER=${KEYCLOAK_USER}
+      - KEYCLOAK_PASSWORD=${KEYCLOAK_PASSWORD}
+      - KEYCLOAK_REALM=${KEYCLOAK_REALM}
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+      - FRONTEND_HOST=${FRONTEND_HOST}
+
+  hexagonalChess_frontend:
+    container_name: hexagonalChess_frontend
+    hostname: hexagonalChess-frontend
+    image: sisimomo/hexagonal-chess-frontend:latest
+    restart: unless-stopped
+
+  hexagonalChess_mariadb:
+    container_name: hexagonalChess_mariadb
+    hostname: hexagonalChess-mariadb
+    image: 'mariadb:10.11'
+    environment:
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+      - MARIADB_USER=${MARIADB_USER}
+      - MARIADB_PASSWORD=${MARIADB_PASSWORD}
+      - MARIADB_DATABASE=${MARIADB_DATABASE}
+    volumes:
+      - ./mariadb_data/volume:/var/lib/mysql
+      - ./mariadb_data/init-scripts:/docker-entrypoint-initdb.d
+
+  hexagonalChess_keycloak:
+    container_name: hexagonalChess_keycloak
+    hostname: hexagonalChess-keycloak
+    image: quay.io/keycloak/keycloak:22.0.1
+    restart: unless-stopped
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_USER}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_PASSWORD}
+    volumes:
+      - ./keycloak_data/volume:/opt/keycloak/data/
+      - ./keycloak_data/HexagonalChess-realm.json:/opt/keycloak/data/import/HexagonalChess-realm.json
+    command:
+      - start --import-realm --proxy=edge --hostname=${KEYCLOAK_HOSTNAME}
+
+  hexagonalChess_cloudflared:
+    container_name: hexagonalChess_cloudflared
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
